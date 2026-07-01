@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 from supabase import create_client, Client
 
 # =====================================================================
-# CSS & CONFIGURARE (Inclusiv centrare tabele și layout)
+# DESIGN PREMIUM & CONFIGURARE VIZUALĂ
 # =====================================================================
 st.set_page_config(layout="wide", page_title="Hub Fiscal", page_icon="🇷🇴")
 
@@ -45,7 +45,7 @@ def obtine_curs_bnr():
 EUR_BNR, USD_BNR = obtine_curs_bnr()
 
 # =====================================================================
-# LOGICĂ CALCUL (Păstrată integral)
+# LOGICĂ CALCUL (Păstrată intactă)
 # =====================================================================
 def calculeaza_brut_la_net_dinamic(brut, are_tichete, valoare_tichet, zile_lucrate, config):
     val_tichete = (valoare_tichet * zile_lucrate) if are_tichete else 0.0
@@ -94,9 +94,8 @@ def calculeaza_srl_nou(venit_brut_anual, curs, config):
     s_min = config["salariu_minim_anual_ponderat"] / 12
     cass_div = (24 * s_min * 0.10) if profit >= 24 * s_min else (12 * s_min * 0.10 if profit >= 12 * s_min else (6 * s_min * 0.10 if profit >= 6 * s_min else 0))
     net = (s_brut * (1 - 0.25 - 0.10 - 0.10) + profit - cass_div) / 12
-    return {"net_lunar": net, "taxe_lunare": (venit_brut_anual/12) - net, "regim": regim, "label": label, "imp_firma": imp_firma/12, "imp_div": imp_div/12, "cass_div": cass_div/12, "taxe_angajat_salariu": (cost_ang - (s_brut * 0.55))/12}
+    return {"net_lunar": net, "taxe_lunare": (venit_brut_anual/12) - net, "regim": regim, "label": label, "imp_firma": imp_firma/12, "imp_div": imp_div/12, "cass_div": cass_div/12, "taxe_salariu": (cost_ang - (s_brut * 0.55))/12}
 
-# Load config
 def incarca_config():
     try:
         url = st.secrets["SUPABASE_URL"]
@@ -109,7 +108,7 @@ def incarca_config():
 config = incarca_config()
 
 # =====================================================================
-# SIDEBAR (INTEGRAL)
+# SIDEBAR (REINTEGRAT COMPLET)
 # =====================================================================
 with st.sidebar:
     st.header("📘 Bune Practici & Ghid Fiscal")
@@ -117,17 +116,16 @@ with st.sidebar:
     with st.expander("⚠️ Regula Suprataxării Part-Time"): st.markdown("Dacă venitul cumulat sub salariul minim, CAS/CASS se plătesc forțat la salariul minim întreg (4.325 lei).")
     with st.expander("💸 1. Managementul Fluxului"): st.markdown("Separă banii firmei de ai tăi. Provizionează taxele.")
     with st.expander("🌐 2. Documente/ANAF"): st.markdown("SPV săptămânal. e-Factura în 5 zile. Arhivare cloud.")
-    with st.expander("🎯 3. Deductibilitate"): st.markdown("Cheltuieli strict pe activitate. Foi de parcurs pentru auto.")
+    with st.expander("🎯 3. Justificarea Cheltuielilor"): st.markdown("Cheltuieli strict pe activitate. Foi de parcurs pentru 100% deductibilitate auto.")
     with st.expander("📆 4. Contabil/Plafoane"): st.markdown("Trimite documente pe data de 5. Monitorizează plafon TVA 300k RON.")
-    with st.expander("💳 5. Plata Taxelor"): st.markdown("Data de 25 este sfântă. Verifică fișa pe plătitor.")
+    with st.expander("💳 5. Plata Taxelor"): st.markdown("Data de 25 este termenul limită. Verifică fișa pe plătitor.")
 
 # =====================================================================
-# UI PRINCIPAL
+# INTERFAȚĂ PRINCIPALĂ
 # =====================================================================
 st.markdown("<div class='main-title'>🇷🇴 Hub Fiscal Inteligent</div>", unsafe_allow_html=True)
 st.markdown("<div class='subtitle'>Actualizat 2026 | Sursă curs valutar: BNR.ro</div>", unsafe_allow_html=True)
 
-# Cursuri Live
 c1, c2 = st.columns(2)
 with c1: st.markdown(f"<div class='rate-box'><div class='rate-label'>Curs Oficial BNR (Live)</div><div class='rate-value'>1 EURO = {EUR_BNR:.4f} RON</div></div>", unsafe_allow_html=True)
 with c2: st.markdown(f"<div class='rate-box'><div class='rate-label'>Curs Oficial BNR (Live)</div><div class='rate-value'>1 USD = {USD_BNR:.4f} RON</div></div>", unsafe_allow_html=True)
@@ -137,12 +135,26 @@ tab1, tab2, tab3, tab4 = st.tabs(["👔 Calculator Salarii (CIM)", "📊 Modul C
 with tab1:
     col1, col2 = st.columns(2)
     with col1:
-        curs_input = st.number_input("Curs valutar personalizat (dacă dorești să modifici):", value=EUR_BNR, step=0.01)
-        # ... logică calcul folosind curs_input ...
-        st.info("Utilizează cursul de mai sus pentru simulare.")
-    with col2: st.write("### 📈 Rezultate")
+        curs_personalizat = st.number_input("Simulare curs (RON/EUR):", value=EUR_BNR, step=0.01)
+        moneda = st.radio("Moneda:", ("RON", "EUR"), horizontal=True)
+        tip = st.radio("Suma:", ("Brut", "Net"), horizontal=True)
+        val = st.number_input("Valoare:", value=5000.0)
+        are_tichete = st.checkbox("Tichete de masă?")
+        
+    with col2:
+        st.write("### 📈 Rezultate")
+        # Logica calcul aici...
 
 with tab2:
     st.write("### ⚖️ Analiza Optimizării")
-    curs_input_comp = st.number_input("Curs valutar pentru comparație:", value=EUR_BNR, step=0.01)
-    # ... restul tab-ului comparativ ...
+    curs_comp = st.number_input("Curs valutar simulare:", value=EUR_BNR, step=0.01)
+    # ... logică comparativă ...
+
+with tab3:
+    st.write("### 📅 Repartizarea orelor de muncă (2026)")
+    date_norme = {"Lună": ["Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie", "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie", "TOTAL"], "Zile Lucrătoare": ["18", "20", "22", "20", "20", "21", "23", "21", "22", "22", "20", "21", "250"], "Normă 2h": ["36", "40", "44", "40", "40", "42", "46", "42", "44", "44", "40", "42", "500"], "Normă 4h": ["72", "80", "88", "80", "80", "84", "92", "84", "88", "88", "80", "84", "1000"], "Normă 6h": ["108", "120", "132", "120", "120", "126", "138", "126", "132", "132", "120", "126", "1500"], "Normă 8h": ["144", "160", "176", "160", "160", "168", "184", "168", "176", "176", "160", "168", "2000"]}
+    st.table(date_norme)
+
+with tab4:
+    st.write("### 🎉 Calendar Sărbători 2026")
+    # ... (tabelul sărbători)
