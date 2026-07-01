@@ -6,7 +6,7 @@ from supabase import create_client, Client
 # =====================================================================
 # DESIGN PREMIUM & CONFIGURARE VIZUALĂ
 # =====================================================================
-st.set_page_config(layout="wide", page_title="Hub Fiscal Inteligent 2026", page_icon="🇷🇴")
+st.set_page_config(layout="wide", page_title="Hub Fiscal", page_icon="🇷🇴")
 
 st.markdown("""
 <style>
@@ -125,7 +125,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =====================================================================
-# 💱 PRELUARE CURS VALUTAR LIVE BNR (Conform standarde securitate BNR)
+# 💱 PRELUARE CURS VALUTAR LIVE BNR
 # =====================================================================
 @st.cache_data(ttl=3600)
 def obtine_curs_bnr_live():
@@ -146,11 +146,10 @@ def obtine_curs_bnr_live():
 CURS_BNR_LIVE = obtine_curs_bnr_live()
 
 # =====================================================================
-# 🔒 CONEXIUNE SUPABASE SECURE (Folosind st.secrets)
+# 🔒 CONEXIUNE SUPABASE SECURE
 # =====================================================================
 @st.cache_data(ttl=600)
 def incarca_config_din_supabase():
-    # Fallback local de siguranță
     config_fallback = {
         "salariu_minim_brut_iulie": 4325, "salariu_minim_anual_ponderat": 50250, "plafon_micro_eur": 100000,
         "taxe_angajat": {"cas_procent": 0.25, "cass_procent": 0.10, "impozit_procent": 0.10},
@@ -160,10 +159,8 @@ def incarca_config_din_supabase():
     }
     
     try:
-        # AICI APLICĂM SECURITATEA: Citim cheile din seiful Streamlit, nu din cod!
         url = st.secrets["SUPABASE_URL"]
         key = st.secrets["SUPABASE_KEY"]
-        
         supabase: Client = create_client(url, key)
         response = supabase.table("configurare_fiscala").select("cheie, valoare").execute()
         date_db = {rand["cheie"]: float(rand["valoare"]) for rand in response.data}
@@ -177,7 +174,6 @@ def incarca_config_din_supabase():
             "srl": {"impozit_venit_micro": date_db["impozit_venit_micro"], "impozit_profit_standard": date_db["impozit_profit_standard"], "impozit_dividende_nou": date_db["impozit_dividende_nou"], "cass_dividende_procent": date_db["cass_procent"]}
         }
     except Exception:
-        # Dacă cheile lipsesc (ex: testare locală fără seif configurat), aplicația rulează fallback-ul și nu pică.
         return config_fallback
 
 config_fiscal = incarca_config_din_supabase()
@@ -305,14 +301,14 @@ with st.sidebar:
 # =====================================================================
 # INTERFAȚA WEB PRINCIPALĂ
 # =====================================================================
-st.markdown("<div class='main-title'>🇷🇴 Hub Fiscal Inteligent 2026</div>", unsafe_allow_html=True)
-st.markdown("<div class='subtitle'>Simulator avansat de analiză comparativă și modelare a structurilor de venit.</div>", unsafe_allow_html=True)
+st.markdown("<div class='main-title'>🇷🇴 Hub Fiscal Inteligent</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitle'>Simulator avansat de analiză comparativă și modelare a structurilor de venit. (Actualizat 2026)</div>", unsafe_allow_html=True)
 
 st.markdown("<div class='curs-container'>", unsafe_allow_html=True)
 col_curs_1, col_curs_2, col_curs_3 = st.columns([1, 2, 1])
 with col_curs_2:
-    st.write(f"🔄 **Sursă Curs Valutar:** PreLuat live din XML oficial de pe `bnr.ro`")
-    curs_eur = st.number_input("💱 Curs Valutar de Referință BNR (EUR/RON):", min_value=1.0, value=CURS_BNR_LIVE, step=0.01, key="curs_global")
+    st.write(f"🔄 **Sursă Curs Valutar:** bnr.ro")
+    curs_eur = st.number_input("💱 Curs Valutar de Referință (EUR/RON):", min_value=1.0, value=CURS_BNR_LIVE, step=0.01, key="curs_global", disabled=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
 tab1, tab2, tab3, tab4 = st.tabs([
@@ -405,9 +401,9 @@ with tab2:
         h_cim += "<div class='card-title'>👔 Angajat (CIM)</div>"
         h_cim += f"<div class='card-value-container'><div class='card-net-value'>{(rez_cim['net_lunar']/coef):.2f} {moneda_t2}</div></div>"
         h_cim += "<div class='tax-breakdown-title'>Taxe reținute detaliat:</div>"
-        h_cim += f"<div class='tax-item'><span class='tax-name'>CAS (Pensie):</span><span class='tax-val-bold'>{(rez_cim['cas']/coef):.2f} {moneda_t2}</span></div>"
-        h_cim += f"<div class='tax-item'><span class='tax-name'>CASS (Sănătate):</span><span class='tax-val-bold'>{(rez_cim['cass']/coef):.2f} {moneda_t2}</span></div>"
-        h_cim += f"<div class='tax-item'><span class='tax-name'>Impozit pe Venit:</span><span class='tax-val-bold'>{(rez_cim['impozit']/coef):.2f} {moneda_t2}</span></div>"
+        h_cim += f"<div class='tax-item'><span class='tax-name'>CAS (Pensie 25%):</span><span class='tax-val-bold'>{(rez_cim['cas']/coef):.2f} {moneda_t2}</span></div>"
+        h_cim += f"<div class='tax-item'><span class='tax-name'>CASS (Sănătate 10%):</span><span class='tax-val-bold'>{(rez_cim['cass']/coef):.2f} {moneda_t2}</span></div>"
+        h_cim += f"<div class='tax-item'><span class='tax-name'>Impozit pe Venit (10%):</span><span class='tax-val-bold'>{(rez_cim['impozit']/coef):.2f} {moneda_t2}</span></div>"
         h_cim += f"<div class='tax-item' style='margin-top:10px; border-top: 1px dashed #30363d; padding-top:10px;'><span class='tax-name'>Total Taxe CIM:</span><span class='tax-val-bold'>{(rez_cim['taxe_lunare']/coef):.2f} {moneda_t2}</span></div>"
         h_cim += "</div>"
         st.markdown(h_cim, unsafe_allow_html=True)
@@ -418,9 +414,9 @@ with tab2:
         h_pfa += "<div class='card-title'>💼 PFA (Sistem Real)</div>"
         h_pfa += f"<div class='card-value-container'><div class='card-net-value'>{(rez_pfa['net_lunar']/coef):.2f} {moneda_t2}</div></div>"
         h_pfa += "<div class='tax-breakdown-title'>Contribuții estimate detaliat:</div>"
-        h_pfa += f"<div class='tax-item'><span class='tax-name'>CAS (Plafoane):</span><span class='tax-val-bold'>{(rez_pfa['cas_lunar']/coef):.2f} {moneda_t2}</span></div>"
-        h_pfa += f"<div class='tax-item'><span class='tax-name'>CASS (Praguri):</span><span class='tax-val-bold'>{(rez_pfa['cass_lunar']/coef):.2f} {moneda_t2}</span></div>"
-        h_pfa += f"<div class='tax-item'><span class='tax-name'>Impozit pe Venit:</span><span class='tax-val-bold'>{(rez_pfa['impozit_lunar']/coef):.2f} {moneda_t2}</span></div>"
+        h_pfa += f"<div class='tax-item'><span class='tax-name'>CAS (Pensie 25%):</span><span class='tax-val-bold'>{(rez_pfa['cas_lunar']/coef):.2f} {moneda_t2}</span></div>"
+        h_pfa += f"<div class='tax-item'><span class='tax-name'>CASS (Sănătate 10%):</span><span class='tax-val-bold'>{(rez_pfa['cass_lunar']/coef):.2f} {moneda_t2}</span></div>"
+        h_pfa += f"<div class='tax-item'><span class='tax-name'>Impozit pe Venit (10%):</span><span class='tax-val-bold'>{(rez_pfa['impozit_lunar']/coef):.2f} {moneda_t2}</span></div>"
         h_pfa += f"<div class='tax-item' style='margin-top:10px; border-top: 1px dashed #30363d; padding-top:10px;'><span class='tax-name'>Total Taxe PFA:</span><span class='tax-val-bold'>{(rez_pfa['taxe_lunare']/coef):.2f} {moneda_t2}</span></div>"
         h_pfa += "</div>"
         st.markdown(h_pfa, unsafe_allow_html=True)
@@ -433,7 +429,7 @@ with tab2:
         h_srl += "<div class='tax-breakdown-title'>Impozite agregate detaliat:</div>"
         h_srl += f"<div class='tax-item'><span class='tax-name'>{rez_srl['label_impozit_firma']}:</span><span class='tax-val-bold'>{(rez_srl['impozit_firma_lunar']/coef):.2f} {moneda_t2}</span></div>"
         h_srl += f"<div class='tax-item'><span class='tax-name'>Impozit Dividende (16%):</span><span class='tax-val-bold'>{(rez_srl['impozit_dividende_lunar']/coef):.2f} {moneda_t2}</span></div>"
-        h_srl += f"<div class='tax-item'><span class='tax-name'>CASS Dividende:</span><span class='tax-val-bold'>{(rez_srl['cass_dividende_lunar']/coef):.2f} {moneda_t2}</span></div>"
+        h_srl += f"<div class='tax-item'><span class='tax-name'>CASS Dividende (10%):</span><span class='tax-val-bold'>{(rez_srl['cass_dividende_lunar']/coef):.2f} {moneda_t2}</span></div>"
         h_srl += f"<div class='tax-item'><span class='tax-name'>Taxe Salariu Obligatoriu:</span><span class='tax-val-info'>{(rez_srl['taxe_angajat_salariu_lunar']/coef):.2f} {moneda_t2}</span></div>"
         h_srl += f"<div class='tax-item' style='margin-top:10px; border-top: 1px dashed #30363d; padding-top:10px;'><span class='tax-name'>Total Taxe SRL:</span><span class='tax-val-bold'>{(rez_srl['taxe_lunare']/coef):.2f} {moneda_t2}</span></div>"
         h_srl += "</div>"
