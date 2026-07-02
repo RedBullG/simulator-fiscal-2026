@@ -146,7 +146,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =====================================================================
-# 💱 PRELUARE CURS VALUTAR LIVE BNR (Adăugat GBP conform cerinței)
+# 💱 PRELUARE CURS VALUTAR LIVE BNR
 # =====================================================================
 @st.cache_data(ttl=3600)
 def obtine_curs_bnr_live():
@@ -171,7 +171,7 @@ def obtine_curs_bnr_live():
 CURS_EUR_LIVE, CURS_USD_LIVE, CURS_GBP_LIVE = obtine_curs_bnr_live()
 
 # =====================================================================
-# 🔒 CONEXIUNE SUPABASE SECURE (Folosind st.secrets)
+# 🔒 CONEXIUNE SUPABASE SECURE
 # =====================================================================
 @st.cache_data(ttl=600)
 def incarca_config_din_supabase():
@@ -267,10 +267,20 @@ def calculeaza_srl_nou(venit_brut_anual, curs_valutar, config=config_fiscal):
     baza_c_div = 24 * s_mediu if div_ramase >= 24 * s_mediu else (12 * s_mediu if div_ramase >= 12 * s_mediu else (6 * s_mediu if div_ramase >= 6 * s_mediu else 0))
     cass_div = baza_c_div * config["srl"]["cass_dividende_procent"]
     
-    return {"net_lunar": (net_sal_anual + div_ramase - cass_div) / 12, "taxe_lunare": (venit_brut_anual - (net_sal_anual + div_ramase - cass_div)) / 12, "regim": regim, "impozit_firma_lunar": impozit_firma / 12, "impozit_dividende_lunar": imp_div / 12, "cass_dividende_lunar": cass_div / 12, "net_salariu_angajat_lunar": net_sal_anual / 12, "taxe_angajat_salariu_lunar": (cost_total_ang_anual - net_sal_anual) / 12, "label_impozit_firma": label}
+    # Returnăm strict cheile pe care le așteaptă interfața de mai jos pentru a preveni KeyError
+    return {
+        "net_lunar": (net_sal_anual + div_ramase - cass_div) / 12, 
+        "taxe_lunare": (venit_brut_anual - (net_sal_anual + div_ramase - cass_div)) / 12, 
+        "regim": regim, 
+        "label": label, 
+        "imp_firma": impozit_firma / 12, 
+        "imp_div": imp_div / 12, 
+        "cass_div": cass_div / 12, 
+        "taxe_angajat_salariu": (cost_total_ang_anual - net_sal_anual) / 12
+    }
 
 # =====================================================================
-# BARA LATERALĂ (SIDEBAR) BUNE PRACTICI LEGISLATIVE
+# BARA LATERALĂ (SIDEBAR) BUNE PRACTICI
 # =====================================================================
 with st.sidebar:
     st.header("📘 Bune Practici & Ghid Fiscal")
@@ -326,7 +336,7 @@ with st.sidebar:
 st.markdown("<div class='main-title'>🏛️ Hub Fiscal Inteligent</div>", unsafe_allow_html=True)
 st.markdown("<div class='subtitle'>Simulator avansat de analiză comparativă și modelare a structurilor de venit. (Actualizat la zi)</div>", unsafe_allow_html=True)
 
-# Afișaj Informativ Curs - Echilibrat geometric în 3 coloane (Responsive)
+# Afișaj Informativ Curs
 col_a, col_b, col_c = st.columns(3)
 with col_a: st.markdown(f"<div class='rate-box'><div class='rate-label'>Curs Oficial BNR (Live)</div><div class='rate-value'>1 EURO = {CURS_EUR_LIVE:.4f} RON</div></div>", unsafe_allow_html=True)
 with col_b: st.markdown(f"<div class='rate-box'><div class='rate-label'>Curs Oficial BNR (Live)</div><div class='rate-value'>1 USD = {CURS_USD_LIVE:.4f} RON</div></div>", unsafe_allow_html=True)
@@ -360,7 +370,7 @@ with tab1:
         valoare_tichet, zile_lucrate = 0.0, 0
         if are_tichete:
             c1, c2 = st.columns(2)
-            with c1: valoare_tichet = st.number_input("Valoare nominală Re-Calcul (RON):", min_value=0.0, value=35.0, step=5.0)
+            with c1: valoare_tichet = st.number_input("Valoare nominală tichet (RON):", min_value=0.0, value=35.0, step=5.0)
             with c2: zile_lucrate = st.number_input("Zile lucrătoare în lună:", min_value=0, max_value=31, value=21)
             
         suma_introdusa = st.number_input(f"Introduceți valoarea ({moneda}):", min_value=0.0, value=5000.0 if moneda == "RON" else 1000.0, step=100.0)
