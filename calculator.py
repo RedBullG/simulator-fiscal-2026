@@ -4,54 +4,177 @@ import xml.etree.ElementTree as ET
 from supabase import create_client, Client
 
 # =====================================================================
-# CONFIGURARE PAGINĂ & STILIZARE CSS
+# DESIGN PREMIUM, CENTRARE TAB-URI ȘI RESPONSIVENESS (CSS MASTER)
 # =====================================================================
-st.set_page_config(layout="wide", page_title="Hub Fiscal Inteligent", page_icon="🇷🇴")
+st.set_page_config(layout="wide", page_title="Hub Fiscal Inteligent", page_icon="🏛️")
 
 st.markdown("""
 <style>
-    html, body, [data-testid="stAppViewContainer"] { font-family: 'Inter', sans-serif; background-color: #0d1117 !important; }
-    .main-title { font-size: 36px !important; font-weight: 800 !important; color: #f0f6fc; text-align: center; }
-    .subtitle { color: #8b949e !important; text-align: center; margin-bottom: 25px; }
-    .rate-container { display: flex; gap: 20px; justify-content: center; margin-bottom: 30px; }
-    .rate-box { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 15px 30px; text-align: center; width: 100%; max-width: 300px; }
-    .rate-label { color: #8b949e; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
-    .rate-value { font-size: 22px; font-weight: 700; color: #38bdf8; }
-    .fiscal-card { background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .card-net-value { font-size: 28px !important; font-weight: 800 !important; color: #10b981 !important; text-align: center; margin-top: 10px; margin-bottom: 20px; }
-    .tax-breakdown-title { font-size: 13px; font-weight: 600; color: #8b949e; text-transform: uppercase; text-align: center; margin-bottom: 15px; }
-    .tax-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #21262d; font-size: 14px; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    
+    html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
+        font-family: 'Inter', sans-serif;
+        background-color: #0d1117 !important;
+    }
+    
+    .main-title {
+        font-size: 36px !important;
+        font-weight: 800 !important;
+        background: linear-gradient(90deg, #3b82f6, #10b981);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 5px !important;
+        text-align: center;
+    }
+    
+    .subtitle {
+        color: #8b949e !important;
+        font-size: 15px !important;
+        margin-bottom: 25px !important;
+        text-align: center;
+    }
+
+    /* Aliniere la centru forțată pentru tab-urile Streamlit */
+    [data-testid="stTabBar"] {
+        justify-content: center !important;
+        gap: 15px !important;
+        border-bottom: 1px solid #30363d !important;
+    }
+    
+    [data-testid="stTabBar"] button {
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        color: #8b949e !important;
+        padding: 10px 20px !important;
+    }
+    
+    [data-testid="stTabBar"] button[aria-selected="true"] {
+        color: #58a6ff !important;
+        border-bottom: 2px solid #58a6ff !important;
+    }
+
+    /* Grila adaptivă pentru curs valutar (Responsive) */
+    .rate-box {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 12px;
+        padding: 18px;
+        text-align: center;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .rate-label {
+        color: #8b949e;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .rate-value {
+        font-size: 22px;
+        font-weight: 700;
+        color: #38bdf8;
+    }
+
+    .fiscal-card {
+        background: linear-gradient(145deg, #161b22, #0d1117);
+        border: 1px solid #30363d;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 15px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+    
+    .card-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        border-radius: 20px;
+        margin-bottom: 12px;
+    }
+    .badge-cim { background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .badge-pfa { background-color: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-srl { background-color: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+    .card-value-container {
+        background: rgba(255,255,255,0.02);
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 20px;
+        border: 1px solid rgba(255,255,255,0.05);
+        text-align: center;
+    }
+    .card-value-label {
+        font-size: 11px;
+        color: #8b949e;
+        text-transform: uppercase;
+    }
+    .card-net-value {
+        font-size: 32px !important;
+        font-weight: 800 !important;
+        color: #10b981 !important;
+    }
+    
+    .tax-breakdown-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #8b949e;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        text-align: center;
+    }
+    .tax-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #21262d;
+        font-size: 14px;
+    }
     .tax-name { color: #c9d1d9; }
     .tax-val-bold { font-weight: 600; color: #f43f5e; }
     .tax-val-info { font-weight: 600; color: #38bdf8; }
+
     table { width: 100% !important; margin-left: auto; margin-right: auto; }
-    th, td { text-align: center !important; }
-    .info-text { color: #c9d1d9; font-size: 14px; line-height: 1.6; }
+    th { text-align: center !important; background-color: #1f2937 !important; color: #f0f6fc !important; }
+    td { text-align: center !important; color: #c9d1d9 !important; vertical-align: middle !important; }
+    .stTable { background-color: #161b22 !important; border: 1px solid #30363d !important; border-radius: 8px !important; overflow-x: auto !important; }
+    
+    .info-text { color: #c9d1d9; font-size: 14px; line-height: 1.6; margin-bottom: 15px; }
 </style>
 """, unsafe_allow_html=True)
 
 # =====================================================================
-# CURS VALUTAR BNR (LIVE)
+# 💱 PRELUARE CURS VALUTAR LIVE BNR (Adăugat GBP conform cerinței)
 # =====================================================================
 @st.cache_data(ttl=3600)
-def obtine_curs_bnr():
+def obtine_curs_bnr_live():
     try:
-        r = requests.get("https://www.bnr.ro/nbrfxrates.xml", timeout=5)
-        root = ET.fromstring(r.content)
-        ns = {'bnr': 'http://www.bnr.ro/xsd'}
-        eur = float(root.find(".//bnr:Rate[@currency='EUR']", ns).text)
-        usd = float(root.find(".//bnr:Rate[@currency='USD']", ns).text)
-        return eur, usd
-    except:
-        return 4.98, 4.70
+        url = "https://www.bnr.ro/nbrfxrates.xml"
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+        response = requests.get(url, headers=headers, timeout=5)
+        response.raise_for_status()
+        root = ET.fromstring(response.content)
+        namespace = {'bnr': 'http://www.bnr.ro/xsd'}
+        rata_eur = root.find(".//bnr:Rate[@currency='EUR']", namespace)
+        rata_usd = root.find(".//bnr:Rate[@currency='USD']", namespace)
+        rata_gbp = root.find(".//bnr:Rate[@currency='GBP']", namespace)
+        
+        eur_val = float(rata_eur.text) if rata_eur is not None else 4.98
+        usd_val = float(rata_usd.text) if rata_usd is not None else 4.70
+        gbp_val = float(rata_gbp.text) if rata_gbp is not None else 5.90
+        return eur_val, usd_val, gbp_val
+    except Exception:
+        return 4.98, 4.70, 5.90
 
-EUR_BNR, USD_BNR = obtine_curs_bnr()
+CURS_EUR_LIVE, CURS_USD_LIVE, CURS_GBP_LIVE = obtine_curs_bnr_live()
 
 # =====================================================================
-# CONEXIUNE SUPABASE & FALLBACK
+# 🔒 CONEXIUNE SUPABASE SECURE (Folosind st.secrets)
 # =====================================================================
 @st.cache_data(ttl=600)
-def incarca_config():
+def incarca_config_din_supabase():
     config_fallback = {
         "salariu_minim_brut_iulie": 4325, "salariu_minim_anual_ponderat": 50250, "plafon_micro_eur": 100000,
         "taxe_angajat": {"cas_procent": 0.25, "cass_procent": 0.10, "impozit_procent": 0.10},
@@ -60,107 +183,154 @@ def incarca_config():
         "srl": {"impozit_venit_micro": 0.01, "impozit_profit_standard": 0.16, "impozit_dividende_nou": 0.16, "cass_dividende_procent": 0.10}
     }
     try:
-        if "SUPABASE_URL" in st.secrets and "SUPABASE_KEY" in st.secrets:
-            supabase: Client = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
-            resp = supabase.table("configurare_fiscala").select("cheie, valoare").execute()
-            data = {r["cheie"]: float(r["valoare"]) for r in resp.data}
-            if data: return {
-                "salariu_minim_brut_iulie": data.get("salariu_minim_brut_iulie", 4325),
-                "salariu_minim_anual_ponderat": data.get("salariu_minim_anual_ponderat", 50250),
-                "plafon_micro_eur": data.get("plafon_micro_eur", 100000),
-                "taxe_angajat": {"cas_procent": data.get("cas_procent", 0.25), "cass_procent": data.get("cass_procent", 0.10), "impozit_procent": data.get("impozit_procent", 0.10)},
-                "taxe_angajator": {"cam_procent": data.get("cam_procent", 0.0225)},
-                "pfa": {"impozit_procent": data.get("impozit_procent", 0.10), "cas_procent": data.get("cas_procent", 0.25), "cass_procent": data.get("cass_procent", 0.10)},
-                "srl": {"impozit_venit_micro": data.get("impozit_venit_micro", 0.01), "impozit_profit_standard": data.get("impozit_profit_standard", 0.16), "impozit_dividende_nou": data.get("impozit_dividende_nou", 0.16), "cass_dividende_procent": data.get("cass_procent", 0.10)}
-            }
-    except:
-        pass
-    return config_fallback
+        url = st.secrets["SUPABASE_URL"]
+        key = st.secrets["SUPABASE_KEY"]
+        supabase: Client = create_client(url, key)
+        response = supabase.table("configurare_fiscala").select("cheie, valoare").execute()
+        date_db = {rand["cheie"]: float(rand["valoare"]) for rand in response.data}
+        return {
+            "salariu_minim_brut_iulie": date_db["salariu_minim_brut_iulie"],
+            "salariu_minim_anual_ponderat": date_db["salariu_minim_anual_ponderat"],
+            "plafon_micro_eur": date_db["plafon_micro_eur"],
+            "taxe_angajat": {"cas_procent": date_db["cas_procent"], "cass_procent": date_db["cass_procent"], "impozit_procent": date_db["impozit_procent"]},
+            "taxe_angajator": {"cam_procent": date_db["cam_procent"]},
+            "pfa": {"impozit_procent": date_db["impozit_procent"], "cas_procent": date_db["cas_procent"], "cass_procent": date_db["cass_procent"]},
+            "srl": {"impozit_venit_micro": date_db["impozit_venit_micro"], "impozit_profit_standard": date_db["impozit_profit_standard"], "impozit_dividende_nou": date_db["impozit_dividende_nou"], "cass_dividende_procent": date_db["cass_procent"]}
+        }
+    except Exception:
+        return config_fallback
 
-config_fiscal = incarca_config()
+config_fiscal = incarca_config_din_supabase()
 
 # =====================================================================
-# LOGICĂ DE CALCUL
+# ENGINES DE CALCUL FISCAL
 # =====================================================================
-def calculeaza_brut_la_net_dinamic(brut, are_tichete, valoare_tichet, zile_lucrate, config):
-    val_tichete = (valoare_tichet * zile_lucrate) if are_tichete else 0.0
+def calculeaza_brut_la_net_dinamic(brut, are_tichete, valoare_tichet, zile_lucrate, config=config_fiscal):
+    valoare_tichete_luna = (valoare_tichet * zile_lucrate) if are_tichete else 0.0
     cas = brut * config["taxe_angajat"]["cas_procent"]
-    cass = (brut + val_tichete) * config["taxe_angajat"]["cass_procent"]
-    impozit = max(0, (brut + val_tichete - cas - cass) * config["taxe_angajat"]["impozit_procent"])
-    return {"net_cash": brut - cas - cass - impozit - val_tichete, "total_net": brut - cas - cass - impozit + val_tichete, "cas": cas, "cass": cass, "impozit": impozit, "cost_firma": brut + (brut * config["taxe_angajator"]["cam_procent"]) + val_tichete, "valoare_tichete": val_tichete}
+    cass = (brut + valoare_tichete_luna) * config["taxe_angajat"]["cass_procent"]
+    baza_impozit = (brut + valoare_tichete_luna) - cas - cass
+    impozit = max(0, baza_impozit * config["taxe_angajat"]["impozit_procent"])
+    net_cash = brut - cas - cass - impozit - valoare_tichete_luna
+    return {
+        "valoare_tichete": valoare_tichete_luna, "cas": cas, "cass": cass, "impozit": impozit,
+        "net_cash": net_cash, "total_net": net_cash + valoare_tichete_luna,
+        "cost_firma": brut + (brut * config["taxe_angajator"]["cam_procent"]) + valoare_tichete_luna
+    }
 
-def calculeaza_net_la_brut_dinamic(net_tinta, are_tichete, valoare_tichet, zile_lucrate, config):
-    brut = net_tinta
-    for _ in range(20):
-        rez = calculeaza_brut_la_net_dinamic(brut, are_tichete, valoare_tichet, zile_lucrate, config)
-        if rez["net_cash"] < net_tinta: brut += 100
-        else: brut -= 50
-    return round(brut, 2)
+def calculeaza_net_la_brut_dinamic(net_tinta, are_tichete, valoare_tichet, zile_lucrate, config=config_fiscal):
+    brut_estimat = net_tinta
+    pas = 2000.0
+    while pas > 0.001:
+        rezultat_test = calculeaza_brut_la_net_dinamic(brut_estimat, are_tichete, valoare_tichet, zile_lucrate, config)
+        if rezultat_test["net_cash"] < net_tinta: brut_estimat += pas
+        else: brut_estimat -= pas; pas /= 2.0
+    return round(brut_estimat, 2)
 
-def calculeaza_cim(brut, config):
+def calculeaza_cim(brut, config=config_fiscal):
     cas = brut * config["taxe_angajat"]["cas_procent"]
     cass = brut * config["taxe_angajat"]["cass_procent"]
     impozit = max(0, (brut - cas - cass) * config["taxe_angajat"]["impozit_procent"])
-    return {"net_lunar": brut - cas - cass - impozit, "taxe_lunare": (brut * config["taxe_angajator"]["cam_procent"]) + cas + cass + impozit, "cas": cas, "cass": cass, "impozit": impozit}
+    net_lunar = brut - cas - cass - impozit
+    cost_total_firma = brut + (brut * config["taxe_angajator"]["cam_procent"])
+    return {"net_lunar": net_lunar, "total_net": net_lunar, "taxe_lunare": cost_total_firma - net_lunar, "cas": cas, "cass": cass, "impozit": impozit}
 
-def calculeaza_pfa_nou(venit_brut_anual, config):
-    s_min = config["salariu_minim_anual_ponderat"] / 12
-    cas = (24 * s_min if venit_brut_anual >= 24 * s_min else (12 * s_min if venit_brut_anual >= 12 * s_min else 0)) * config["pfa"]["cas_procent"]
+def calculeaza_pfa_nou(venit_brut_anual, config=config_fiscal):
+    salariu_minim_mediu = config["salariu_minim_anual_ponderat"] / 12
+    baza_cas = 24 * salariu_minim_mediu if venit_brut_anual >= 24 * salariu_minim_mediu else (12 * salariu_minim_mediu if venit_brut_anual >= 12 * salariu_minim_mediu else 0)
+    cas = baza_cas * config["pfa"]["cas_procent"]
     cass_brut = venit_brut_anual * config["pfa"]["cass_procent"]
-    cass = max(6 * s_min * config["pfa"]["cass_procent"], min(72 * s_min * config["pfa"]["cass_procent"], cass_brut))
+    p_min = 6 * salariu_minim_mediu * config["pfa"]["cass_procent"]
+    p_max = 72 * salariu_minim_mediu * config["pfa"]["cass_procent"]
+    cass = p_min if cass_brut < p_min else (p_max if cass_brut > p_max else cass_brut)
     impozit = max(0, venit_brut_anual - cas - cass) * config["pfa"]["impozit_procent"]
-    return {"net_lunar": (venit_brut_anual - cas - cass - impozit) / 12, "taxe_lunare": (cas + cass + impozit) / 12, "cas_lunar": cas/12, "cass_lunar": cass/12, "impozit_lunar": impozit/12}
+    return {"net_lunar": (venit_brut_anual - cas - cass - impozit) / 12, "taxe_lunare": (cas + cass + impozit) / 12, "cas_lunar": cas / 12, "cass_lunar": cass / 12, "impozit_lunar": impozit / 12}
 
-def calculeaza_srl_nou(venit_brut_anual, curs, config):
-    s_brut = config["salariu_minim_brut_iulie"] * 12
-    cost_ang = s_brut * (1 + config["taxe_angajator"]["cam_procent"])
-    plafon = config["plafon_micro_eur"] * curs
-    if venit_brut_anual <= plafon:
-        imp_firma = venit_brut_anual * config["srl"]["impozit_venit_micro"]
-        regim, label = "Micro (1%)", "Impozit Venit (1%)"
-        profit = max(0, venit_brut_anual - cost_ang - imp_firma)
+def calculeaza_srl_nou(venit_brut_anual, curs_valutar, config=config_fiscal):
+    s_brut_anual = config["salariu_minim_brut_iulie"] * 12
+    cost_total_ang_anual = s_brut_anual + (s_brut_anual * config["taxe_angajator"]["cam_procent"])
+    net_sal_anual = s_brut_anual - (s_brut_anual * config["taxe_angajat"]["cas_procent"]) - (s_brut_anual * config["taxe_angajat"]["cass_procent"]) - ((s_brut_anual - (s_brut_anual * config["taxe_angajat"]["cas_procent"]) - (s_brut_anual * config["taxe_angajat"]["cass_procent"])) * config["taxe_angajat"]["impozit_procent"])
+    
+    plafon_micro_ron = config["plafon_micro_eur"] * curs_valutar
+    if venit_brut_anual <= plafon_micro_ron:
+        impozit_firma = venit_brut_anual * config["srl"]["impozit_venit_micro"]
+        regim, label = "Microîntreprindere (1%)", "Impozit Venit (1%)"
+        profit_net_div = max(0, venit_brut_anual - cost_total_ang_anual - impozit_firma)
     else:
-        profit = max(0, venit_brut_anual - cost_ang)
-        imp_firma = profit * config["srl"]["impozit_profit_standard"]
-        regim, label = "Profit (16%)", "Impozit Profit (16%)"
-        profit -= imp_firma
-    imp_div = profit * config["srl"]["impozit_dividende_nou"]
-    profit -= imp_div
-    s_min = config["salariu_minim_anual_ponderat"] / 12
-    cass_div = (24 * s_min * 0.10) if profit >= 24 * s_min else (12 * s_min * 0.10 if profit >= 12 * s_min else (6 * s_min * 0.10 if profit >= 6 * s_min else 0))
-    net = (s_brut * (1 - 0.25 - 0.10 - 0.10) + profit - cass_div) / 12
-    return {"net_lunar": net, "taxe_lunare": (venit_brut_anual/12) - net, "regim": regim, "label": label, "imp_firma": imp_firma/12, "imp_div": imp_div/12, "cass_div": cass_div/12, "taxe_angajat_salariu": (cost_ang - (s_brut * 0.55))/12}
+        impozit_firma = max(0, venit_brut_anual - cost_total_ang_anual) * config["srl"]["impozit_profit_standard"]
+        regim, label = "Impozit Profit (16%)", "Impozit Profit (16%)"
+        profit_net_div = max(0, venit_brut_anual - cost_total_ang_anual) - impozit_firma
+        
+    imp_div = profit_net_div * config["srl"]["impozit_dividende_nou"]
+    div_ramase = profit_net_div - imp_div
+    s_mediu = config["salariu_minim_anual_ponderat"] / 12
+    baza_c_div = 24 * s_mediu if div_ramase >= 24 * s_mediu else (12 * s_mediu if div_ramase >= 12 * s_mediu else (6 * s_mediu if div_ramase >= 6 * s_mediu else 0))
+    cass_div = baza_c_div * config["srl"]["cass_dividende_procent"]
+    
+    return {"net_lunar": (net_sal_anual + div_ramase - cass_div) / 12, "taxe_lunare": (venit_brut_anual - (net_sal_anual + div_ramase - cass_div)) / 12, "regim": regim, "impozit_firma_lunar": impozit_firma / 12, "impozit_dividende_lunar": imp_div / 12, "cass_dividende_lunar": cass_div / 12, "net_salariu_angajat_lunar": net_sal_anual / 12, "taxe_angajat_salariu_lunar": (cost_total_ang_anual - net_sal_anual) / 12, "label_impozit_firma": label}
 
 # =====================================================================
-# SIDEBAR (BUNE PRACTICI)
+# BARA LATERALĂ (SIDEBAR) BUNE PRACTICI LEGISLATIVE
 # =====================================================================
 with st.sidebar:
     st.header("📘 Bune Practici & Ghid Fiscal")
+    
     with st.expander("❓ Dicționar Acronime"):
-        st.markdown("* **CAS (25%)**: Contribuția pentru pensie.\n* **CASS (10%)**: Asigurarea medicală (CNAS).\n* **Impozit (10%)**: Taxa generală pe venit.\n* **CAM (2.25%)**: Contribuție plătită strict de angajator.")
+        st.markdown("""
+        * **CAS (25%)**: Contribuția pentru pensie. Merge la bugetul de stat pentru asigurarea vechimii și calculul pensiei viitoare.
+        * **CASS (10%)**: Asigurarea medicală. Finanțează sistemul public de sănătate (CNAS), oferind acces la servicii medicale.
+        * **Impozit pe Venit (10%)**: Taxa generală reținută pe veniturile realizate.
+        * **CAM (2.25%)**: Contribuție plătită strict de angajator peste salariul brut, destinată fondului de șomaj.
+        """)
+        
     with st.expander("⚠️ Regula Suprataxării Part-Time"):
-        st.markdown(f"Dacă venitul cumulat este sub salariul minim pe țară, **CAS și CASS se plătesc forțat la nivelul unui salariu întreg de {config_fiscal['salariu_minim_brut_iulie']:.0f} lei**, chiar dacă angajatul lucrează doar 2 ore pe zi.")
+        st.markdown(f"""
+        Dacă folosești contracte part-time (2h, 4h, 6h) în SRL pentru păstrarea regimului de microîntreprindere, reține regula:
+        * **Baza minimă**: Dacă venitul cumulat al angajatului este sub salariul minim pe țară, **CAS și CASS se plătesc forțat la nivelul unui salariu brut întreg de {config_fiscal['salariu_minim_brut_iulie']:.0f} lei**, chiar dacă el lucrează doar 2 ore pe zi.
+        * *Excepții*: Elevi, studenți, pensionari sau persoane care au în paralel un alt contract full-time.
+        """)
+
     with st.expander("💸 1. Managementul Fluxului de Bani"):
-        st.markdown("Separă total banii firmei de cumpărăturile personale. Provizionează mereu taxele într-un cont bancar separat de economii la fiecare încasare.")
-    with st.expander("🌐 2. Documente și ANAF"):
-        st.markdown("Verifică Spațiul Privat Virtual (SPV) săptămânal. Facturile B2B trebuie trimise obligatoriu în e-Factura în 5 zile calendaristice.")
+        st.markdown("""
+        * **Separarea totală a banilor:** Nu folosi cardul firmei pentru cumpărături personale. La SRL, banii sunt ai firmei, nu ai tăi; îi poți scoate legal doar prin salarii sau dividende.
+        * **Provizionarea taxelor:** Deschide un cont bancar secundar (de economii). La încasarea unei facturi, transferă imediat acolo procentul estimat de taxe (minim 10-15% la PFA și procentul de dividend + micro la SRL).
+        """)
+
+    with st.expander("🌐 2. Documente și Digitalizare (ANAF)"):
+        st.markdown("""
+        * **Activarea SPV (Spațiul Privat Virtual):** Verifică-l cel puțin o dată pe săptămână. ANAF trimite notificări exclusiv acolo, considerate comunicate legal în termen de 15 zile de la încărcare.
+        * **Adoptarea e-Factura:** Asigură-te că toate facturile emise către alte firme (B2B) sunt transmise în RO e-Factura în termenul legal de 5 zile calendaristice de la emitere. Nerespectarea aduce amenzi mari.
+        """)
+
     with st.expander("🎯 3. Justificarea Cheltuielilor"):
-        st.markdown("Cheltuielile sunt deductibile doar dacă servesc activității economice. Pentru a deduce 100% cheltuielile auto, ai nevoie de foi de parcurs.")
-    with st.expander("📆 4. Relația cu Contabilul"):
-        st.markdown("Trimite toate documentele lunare până pe data de 5 a lunii următoare. Fii atent la plafoanele de trecere la TVA (300.000 lei).")
+        st.markdown("""
+        * **Regula necesității:** O cheltuială este deductibilă doar dacă este efectuată în scopul desfășurării activității economice.
+        * **Achiziții suspecte:** Bunurile de lux, vacanțele decontate ca deplasări fără documente sau cumpărăturile zilnice la supermarket vor fi reîncadrate de inspectori ca nedeductibile.
+        * **Foile de parcurs:** Dacă deduci 100% cheltuielile cu mașina firmei, ești obligat prin lege să completezi foi de parcurs detaliate. Fără ele, poți deduce doar 50%.
+        """)
+
+    with st.expander("📆 4. Relația cu Contabilul & Plafoane"):
+        st.markdown("""
+        * **Contabilul este un partener:** Trimite documentele lunare complete până pe data de 5 ale lunii următoare. Nu trimite documente în ultima zi dinaintea declarațiilor!
+        * **Monitorizarea plafoanelor:** Ține o evidență strictă a veniturilor pentru a nu fi luat prin surprindere de trecerea la TVA (plafon de 300.000 lei) sau de trecerea forțată la impozit pe profit (plafon 100.000 EUR).
+        """)
+        
     with st.expander("💳 5. Plata Taxelor"):
-        st.markdown("Data de 25 a lunii este termenul limită sfânt. Plățile întârziate generează penalități. Cere periodic fișa pe plătitor.")
+        st.markdown("""
+        * **Respectarea termenului de 25:** Data de 25 a lunii este termenul limită pentru depunerea declarațiilor și plata obligațiilor. Întârzierile generează instant dobânzi și penalități.
+        """)
 
 # =====================================================================
-# INTERFAȚĂ PRINCIPALĂ
+# INTERFAȚA WEB PRINCIPALĂ
 # =====================================================================
-st.markdown("<div class='main-title'>🇷🇴 Hub Fiscal Inteligent</div>", unsafe_allow_html=True)
-st.markdown("<div class='subtitle'>Actualizat 2026 | Sursă curs valutar: BNR.ro</div>", unsafe_allow_html=True)
+st.markdown("<div class='main-title'>🏛️ Hub Fiscal Inteligent</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitle'>Simulator avansat de analiză comparativă și modelare a structurilor de venit. (Actualizat la zi)</div>", unsafe_allow_html=True)
 
-# Afișaj Informativ Curs (Carduri Sus)
-col_a, col_b = st.columns(2)
-with col_a: st.markdown(f"<div class='rate-box'><div class='rate-label'>Curs Oficial BNR (Live)</div><div class='rate-value'>1 EURO = {EUR_BNR:.4f} RON</div></div>", unsafe_allow_html=True)
-with col_b: st.markdown(f"<div class='rate-box'><div class='rate-label'>Curs Oficial BNR (Live)</div><div class='rate-value'>1 USD = {USD_BNR:.4f} RON</div></div>", unsafe_allow_html=True)
+# Afișaj Informativ Curs - Echilibrat geometric în 3 coloane (Responsive)
+col_a, col_b, col_c = st.columns(3)
+with col_a: st.markdown(f"<div class='rate-box'><div class='rate-label'>Curs Oficial BNR (Live)</div><div class='rate-value'>1 EURO = {CURS_EUR_LIVE:.4f} RON</div></div>", unsafe_allow_html=True)
+with col_b: st.markdown(f"<div class='rate-box'><div class='rate-label'>Curs Oficial BNR (Live)</div><div class='rate-value'>1 USD = {CURS_USD_LIVE:.4f} RON</div></div>", unsafe_allow_html=True)
+with col_c: st.markdown(f"<div class='rate-box'><div class='rate-label'>Curs Oficial BNR (Live)</div><div class='rate-value'>1 GBP = {CURS_GBP_LIVE:.4f} RON</div></div>", unsafe_allow_html=True)
 
 st.write("---")
 
@@ -168,22 +338,21 @@ tab1, tab2, tab3, tab4 = st.tabs([
     "👔 Calculator Salarii (CIM)", 
     "📊 Modul Comparativ Economic", 
     "📅 Planificator Zile Lucrătoare", 
-    "🎉 Sărbători Legale 2026"
+    "🎉 Sărbători Legale"
 ])
 
 # ---------------------------------------------------------------------
-# TAB 1: CALCULATOR ANGAJAȚI
+# TAB 1: CALCULATOR ANGAJAȚI (CIM)
 # ---------------------------------------------------------------------
 with tab1:
     col_stg, col_drp = st.columns([1, 1], gap="large")
     with col_stg:
         st.write("### ⚙️ Parametri Contract")
         
-        # Căsuța de curs mutat aici, perfect vizibilă, dar neintruzivă
-        curs_personalizat = st.number_input("Curs valutar calcul (RON/EUR):", value=EUR_BNR, step=0.01, key="curs_t1")
+        curs_personalizat = st.number_input("Simulare curs valutar propriu (RON/EUR):", value=CURS_EUR_LIVE, step=0.01, key="curs_t1")
         st.markdown("<br>", unsafe_allow_html=True)
         
-        moneda = st.radio("Moneda:", ("RON", "EUR"), horizontal=True, key="mon_t1")
+        moneda = st.radio("Moneda de calcul:", ("RON", "EUR"), horizontal=True, key="mon_t1")
         tip_calcul = st.radio("Suma introdusă este:", ("Brut (Salariul de bază)", "Net (Banii pe card)"), horizontal=True)
         
         st.markdown("---")
@@ -191,12 +360,11 @@ with tab1:
         valoare_tichet, zile_lucrate = 0.0, 0
         if are_tichete:
             c1, c2 = st.columns(2)
-            with c1: valoare_tichet = st.number_input("Valoare nominală tichet (RON):", min_value=0.0, value=35.0, step=5.0)
-            with c2: zile_lucrate = st.number_input("Zile lucrătoare:", min_value=0, max_value=31, value=21)
+            with c1: valoare_tichet = st.number_input("Valoare nominală Re-Calcul (RON):", min_value=0.0, value=35.0, step=5.0)
+            with c2: zile_lucrate = st.number_input("Zile lucrătoare în lună:", min_value=0, max_value=31, value=21)
             
         suma_introdusa = st.number_input(f"Introduceți valoarea ({moneda}):", min_value=0.0, value=5000.0 if moneda == "RON" else 1000.0, step=100.0)
         
-        # Logica
         suma_ron = suma_introdusa * curs_personalizat if moneda == "EUR" else suma_introdusa
         if "Brut" in tip_calcul:
             brut_final_ron = suma_ron
@@ -219,7 +387,7 @@ with tab1:
         
         html_t1 = "<div class='fiscal-card'>"
         html_t1 += "<div style='text-align:center;'><div class='card-badge badge-cim'>Contract Individual de Muncă</div></div>"
-        html_t1 += f"<div class='card-net-value'>{net_afisat:.2f} {moneda}</div>"
+        html_t1 += f"<div class='card-value-container'><div class='card-value-label'>Bani pe card (Net Cash)</div><div class='card-net-value'>{net_afisat:.2f} {moneda}</div></div>"
         html_t1 += "<div class='tax-breakdown-title'>Detaliere rețineri și contribuții:</div>"
         html_t1 += f"<div class='tax-item'><span class='tax-name'>Salariu Brut Contractual:</span><span class='tax-val'>{str_brut}</span></div>"
         html_t1 += f"<div class='tax-item'><span class='tax-name'>CAS (Pensie 25%):</span><span class='tax-val-bold'>{str_cas}</span></div>"
@@ -229,8 +397,8 @@ with tab1:
         if are_tichete:
             t_val = rez['valoare_tichete'] if moneda == "RON" else rez['valoare_tichete'] / curs_personalizat
             tot_val = rez['total_net'] if moneda == "RON" else rez['total_net'] / curs_personalizat
-            html_t1 += f"<div class='tax-item'><span class='tax-name'>Card tichete de masă:</span><span class='tax-val-info'>{t_val:.2f} {moneda}</span></div>"
-            html_t1 += f"<div class='tax-item'><span class='tax-name'><b>Total Net Real (Bani + Tichete):</b></span><span class='tax-val-info'><b>{tot_val:.2f} {moneda}</b></span></div>"
+            html_t1 += f"<div class='tax-item'><div class='tax-name'>Card tichete de masă:</div><div class='tax-val-info'>{t_val:.2f} {moneda}</div></div>"
+            html_t1 += f"<div class='tax-item'><div class='tax-name'><b>Total Net Real (Bani + Tichete):</b></div><div class='tax-val-info'><b>{tot_val:.2f} {moneda}</b></div></div>"
             
         html_t1 += f"<div class='tax-item' style='margin-top: 15px; border-top: 1px dashed #30363d; padding-top: 15px;'><span class='tax-name'><b>Cost Total Angajator:</b></span><span class='tax-val-info' style='font-size: 18px;'>{str_cost}</span></div>"
         html_t1 += "</div>"
@@ -244,14 +412,15 @@ with tab2:
     st.write("### ⚖️ Analiza Optimizării Veniturilor dintr-un Buget Fix")
     c_m2, c_s2, c_c2 = st.columns([1, 1, 1])
     with c_m2: 
-        moneda_t2 = st.radio("Valuta bugetului:", ("RON", "EUR"), horizontal=True, key="mon_t2")
+        moneda_t2 = st.radio("Valuta bugetului total alocat:", ("RON", "EUR"), horizontal=True, key="mon_t2")
     with c_s2: 
-        b_introdus = st.number_input(f"Buget lunar total ({moneda_t2}):", min_value=500, value=15000 if moneda_t2 == "RON" else 3000, step=500)
+        b_introdus = st.number_input(f"Introduceți bugetul lunar total:", min_value=500, value=15000 if moneda_t2 == "RON" else 3000, step=500)
     with c_c2:
-        curs_comp = st.number_input("Curs valutar calcul (RON/EUR):", value=EUR_BNR, step=0.01, key="curs_t2")
+        curs_comp = st.number_input("Simulare curs valutar (RON/EUR):", value=CURS_EUR_LIVE, step=0.01, key="curs_t2")
     
     buget_lunar = b_introdus * curs_comp if moneda_t2 == "EUR" else b_introdus
     buget_anual = buget_lunar * 12
+    
     rez_cim = calculeaza_cim(buget_lunar, config_fiscal)
     rez_pfa = calculeaza_pfa_nou(buget_anual, config_fiscal)
     rez_srl = calculeaza_srl_nou(buget_anual, curs_comp, config_fiscal)
@@ -263,8 +432,8 @@ with tab2:
     with col1:
         h_cim = "<div class='fiscal-card'>"
         h_cim += "<div style='text-align:center;'><div class='card-badge badge-cim'>Opțiunea 1</div></div>"
-        h_cim += "<div style='text-align:center; color:#f0f6fc; font-size:20px; font-weight:700;'>👔 Angajat (CIM)</div>"
-        h_cim += f"<div class='card-net-value'>{(rez_cim['net_lunar']/coef):.2f} {moneda_t2}</div>"
+        h_cim += "<div class='card-title'>👔 Angajat (CIM)</div>"
+        h_cim += f"<div class='card-value-container'><div class='card-net-value'>{(rez_cim['net_lunar']/coef):.2f} {moneda_t2}</div></div>"
         h_cim += "<div class='tax-breakdown-title'>Taxe reținute detaliat:</div>"
         h_cim += f"<div class='tax-item'><span class='tax-name'>CAS (Pensie 25%):</span><span class='tax-val-bold'>{(rez_cim['cas']/coef):.2f} {moneda_t2}</span></div>"
         h_cim += f"<div class='tax-item'><span class='tax-name'>CASS (Sănătate 10%):</span><span class='tax-val-bold'>{(rez_cim['cass']/coef):.2f} {moneda_t2}</span></div>"
@@ -276,8 +445,8 @@ with tab2:
     with col2:
         h_pfa = "<div class='fiscal-card'>"
         h_pfa += "<div style='text-align:center;'><div class='card-badge badge-pfa'>Opțiunea 2</div></div>"
-        h_pfa += "<div style='text-align:center; color:#f0f6fc; font-size:20px; font-weight:700;'>💼 PFA (Sistem Real)</div>"
-        h_pfa += f"<div class='card-net-value'>{(rez_pfa['net_lunar']/coef):.2f} {moneda_t2}</div>"
+        h_pfa += "<div class='card-title'>💼 PFA (Sistem Real)</div>"
+        h_pfa += f"<div class='card-value-container'><div class='card-net-value'>{(rez_pfa['net_lunar']/coef):.2f} {moneda_t2}</div></div>"
         h_pfa += "<div class='tax-breakdown-title'>Contribuții estimate detaliat:</div>"
         h_pfa += f"<div class='tax-item'><span class='tax-name'>CAS (Pensie 25%):</span><span class='tax-val-bold'>{(rez_pfa['cas_lunar']/coef):.2f} {moneda_t2}</span></div>"
         h_pfa += f"<div class='tax-item'><span class='tax-name'>CASS (Sănătate 10%):</span><span class='tax-val-bold'>{(rez_pfa['cass_lunar']/coef):.2f} {moneda_t2}</span></div>"
@@ -289,8 +458,8 @@ with tab2:
     with col3:
         h_srl = "<div class='fiscal-card'>"
         h_srl += "<div style='text-align:center;'><div class='card-badge badge-srl'>Opțiunea 3</div></div>"
-        h_srl += f"<div style='text-align:center; color:#f0f6fc; font-size:20px; font-weight:700;'>🏢 SRL ({rez_srl['regim']})</div>"
-        h_srl += f"<div class='card-net-value'>{(rez_srl['net_lunar']/coef):.2f} {moneda_t2}</div>"
+        h_srl += f"<div class='card-title'>🏢 SRL ({rez_srl['regim']})</div>"
+        h_srl += f"<div class='card-value-container'><div class='card-net-value'>{(rez_srl['net_lunar']/coef):.2f} {moneda_t2}</div></div>"
         h_srl += "<div class='tax-breakdown-title'>Impozite agregate detaliat:</div>"
         h_srl += f"<div class='tax-item'><span class='tax-name'>{rez_srl['label']}:</span><span class='tax-val-bold'>{(rez_srl['imp_firma']/coef):.2f} {moneda_t2}</span></div>"
         h_srl += f"<div class='tax-item'><span class='tax-name'>Impozit Dividende (16%):</span><span class='tax-val-bold'>{(rez_srl['imp_div']/coef):.2f} {moneda_t2}</span></div>"
